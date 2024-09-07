@@ -1,10 +1,7 @@
 const fastify = require('fastify')({ logger: true, connectionTimeout: 5000 });
-const generateNewWorker = require('./utils/generateNewWorker');
+const { getOrCreateWorker } = require('./utils/generateNewWorker');
 const requestTracker = require('./utils/requestTracker');
 const { v4: uuidv4 } = require('uuid'); // Import UUID generator
-
-const getCatsWorker = generateNewWorker('getCatsWorker');
-const getDogsWorker = generateNewWorker('getDogsWorker');
 
 // Middleware to add or reuse correlationId in request
 fastify.addHook('onRequest', (request, reply, done) => {
@@ -14,12 +11,14 @@ fastify.addHook('onRequest', (request, reply, done) => {
   done();
 });
 
-fastify.get('/getCatsInfo', function handler (request, reply) {
+fastify.get('/getCatsInfo', function handler(request, reply) {
+  const getCatsWorker = getOrCreateWorker('getCatsWorker'); // Create/reuse worker
   requestTracker[request.id] = (result) => reply.send(result);
   getCatsWorker.postMessage({ requestId: request.id, correlationId: request.headers['correlationid'] });
 });
 
-fastify.get('/getDogsInfo', function handler (request, reply) {
+fastify.get('/getDogsInfo', function handler(request, reply) {
+  const getDogsWorker = getOrCreateWorker('getDogsWorker'); // Create/reuse worker
   requestTracker[request.id] = (result) => reply.send(result);
   getDogsWorker.postMessage({ requestId: request.id, correlationId: request.headers['correlationid'] });
 });

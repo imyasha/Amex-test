@@ -33,3 +33,31 @@ We have implemented correlation ID support for all incoming requests and outgoin
 ### Acceptance Criteria:
 - All requests and responses contain a `correlationId` header.
 - If the `correlationId` is provided by the client, that value will be used. If not, a new ID is generated.
+
+# Worker Thread Management
+
+## Overview
+This application uses Fastify and worker threads to handle requests asynchronously. Worker threads are responsible for fetching data (e.g., cats or dogs information) and responding to API requests.
+
+### New Feature: Idle Worker Termination and Recreation
+We have implemented an idle worker termination and recreation logic to improve resource utilization.
+
+### Approach:
+- **Idle Timer**: Workers will be terminated if they do not receive any requests within 15 minutes.
+- **Worker Recreation**: When a new request comes in, if the worker has been terminated due to inactivity, a new worker is created.
+- **Logging**: Worker creation and termination are logged to the console for monitoring.
+
+### Files Modified:
+1. **index.js**: 
+   - Modified to use `getOrCreateWorker` which either creates a new worker or reuses an existing one.
+   - Log worker creation and termination.
+   
+2. **generateNewWorker.js**: 
+   - Refactored to add an idle timer for terminating workers that have been inactive for 15 minutes.
+   - Added logic to create a new worker if an existing worker is terminated.
+
+### Acceptance Criteria:
+- Worker threads should be terminated if idle for 15 minutes.
+- New worker threads are created if required when a new request comes in.
+- Logs are printed in the console to indicate worker creation and termination.
+
